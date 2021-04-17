@@ -1,5 +1,5 @@
-const mailer = require('../modules/mail.js');
-const jwt = require('../modules/jwt');
+const mailer = require('../util/mail.js');
+const jwt = require('../util/jwt');
 
 const indexController = {
     success: (req, res, next) => {
