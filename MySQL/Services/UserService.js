@@ -1,6 +1,8 @@
 const { User } = require('../Models');
 const sequelize = require('sequelize');
-const CutomError = require('../../util/custom-error');
+const CustomError = require('../../util/custom-error');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 const userService = {
     isIdUnique: async (value) => {
@@ -51,10 +53,14 @@ const userService = {
         }
     },
 
-    createUser: async (user_id, password, email, name, gender, age, nickname) => {
+    createUser: async (userId, password, email, name, gender, age, nickname) => {
         try {
+            const salt = await bcrypt.genSalt(saltRounds);
+            const hash = await bcrypt.hash(password, salt);
+
+            password = hash;
             const user = await User.create({
-                user_id: user_id,
+                user_id: userId,
                 password: password,
                 email: email,
                 name: name,
@@ -64,6 +70,40 @@ const userService = {
             })
 
             return user;
+        } catch (err) {
+            throw err;
+        }
+    },
+
+    updatePassword: async (uid, password) => {
+        try {
+            const salt = await bcrypt.genSalt(saltRounds);
+            const hash = await bcrypt.hash(password, salt);
+
+            password = hash;
+
+            const result = await User.update({ password }, {
+                where: { id: uid },
+            })
+
+            console.log(result);
+
+            if (result[0] == 1) return true;
+            return false;
+        } catch (err) {
+            throw err;
+        }
+    },
+
+    updateNickname: async (uid, nickname) => {
+        try {
+            const result = await User.update({ nickname }, {
+                where: { id: uid },
+            })
+
+            if (result[0] == 1) return true;
+            return false;
+
         } catch (err) {
             throw err;
         }
@@ -82,9 +122,8 @@ const userService = {
     userInfo: async (userId) => {
         try {
             const userInfo = await User.findOne({
-                attributes: ['id', 'name', 'age', 'married', 'comment'],
                 where: {
-                    id: userId
+                    user_id: userId
                 }
             })
 
